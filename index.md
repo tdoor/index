@@ -11,27 +11,187 @@ Markdown is a lightweight and easy-to-use syntax for styling your writing. It in
 ```markdown
 Syntax highlighted code block
 
-# Header 1
-## Header 2
-### Header 3
+## Java集合
 
-- Bulleted
-- List
+#### List，Set，Map三者的区别
 
-1. Numbered
-2. List
+![](/md/Java集合.png)
 
-**Bold** and _Italic_ and `Code` text
+#### 集合框架底层数据结构
 
-[Link](url) and ![Image](src)
+![](/md/3g5zoq4pke.png)
+
+
+
+## JVM
+
+#### GC如何判断对象可以被回收 
+
+引用计数法：每个对象有一个引用计数属性，新增一个引用时计数加1，引用释放时计数减1，计 数为0时可以回收
+
+可达性分析法：从 GC Roots 开始向下搜索，搜索所走过的路径称为引用链。当一个对象到 GC Roots 没有任何引用链相连时，则证明此对象是不可用的，那么虚拟机就判断是可回收对象。 
+
+<u>引用计数法，可能会出现A 引用了 B，B 又引用了 A，这时候就算他们都不再使用了，但因为相互 引用 计数器=1 永远无法被回收。</u>
+
+## spring
+
+#### spring循环依赖
+
+[]: https://www.cnblogs.com/daimzh/p/13256413.html
+
+A依赖B的同时B也依赖了A
+
+比较特殊的还有**自己依赖自己**
+
+```java
+@Component
+public class A {// A中注入了A
+	@Autowired
+	private A a;
+}
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+Spring解决循环依赖是有前置条件的
 
-### Jekyll Themes
+1. 出现循环依赖的Bean必须要是单例
+2. 依赖注入的方式不能全是构造器注入的方式
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/tdoor/nacos.github.io/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
 
-### Support or Contact
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+答：Spring通过三级缓存解决了循环依赖，其中一级缓存为单例池（`singletonObjects`）,二级缓存为早期曝光对象`earlySingletonObjects`，三级缓存为早期曝光对象工厂（`singletonFactories`）。当A、B两个类发生循环引用时，在A完成实例化后，就使用实例化后的对象去创建一个对象工厂，并添加到三级缓存中，如果A被AOP代理，那么通过这个工厂获取到的就是A代理后的对象，如果A没有被AOP代理，那么这个工厂获取到的就是A实例化的对象。当A进行属性注入时，会去创建B，同时B又依赖了A，所以创建B的同时又会去调用getBean(a)来获取需要的依赖，此时的getBean(a)会从缓存中获取，第一步，先获取到三级缓存中的工厂；第二步，调用对象工工厂的getObject方法来获取到对应的对象，得到这个对象后将其注入到B中。紧接着B会走完它的生命周期流程，包括初始化、后置处理器等。当B创建完后，会将B再注入到A中，此时A再完成它的整个生命周期。至此，循环依赖结束！
+
+面试官：”为什么要使用三级缓存呢？二级缓存能解决循环依赖吗？“
+
+答：如果要使用二级缓存解决循环依赖，意味着所有Bean在实例化后就要完成AOP代理，这样违背了Spring设计的原则，Spring在设计之初就是通过`AnnotationAwareAspectJAutoProxyCreator`这个后置处理器来在Bean生命周期的最后一步来完成AOP代理，而不是在实例化后就立马进行AOP代理
+
+# MyBatis 
+
+#### --SqlSessionFactory及其常见创建方式
+
+
+
+
+
+## MySQL
+
+#### 事务的基本特性和隔离级别
+
+##### 事务基本特性ACID
+
+原子性(**Atomicity** )指的是一个事务中的操作要么全部成功，要么全部失败。 
+
+一致性(**Consistency** )指的是数据库总是从一个一致性的状态转换到另外一个一致性的状态。比如A转账给B100块钱， 假设A只有90块，支付之前我们数据库里的数据都是符合约束的,但是如果事务执行成功了,我们的数据库 数据就破坏约束了,因此事务不能成功,这里我们说事务提供了一致性的保证 
+
+隔离性(**Isolation**)指的是一个事务的修改在最终提交前，对其他事务是不可见的。 
+
+持久性(**Durability**)指的是一旦事务提交，所做的修改就会永久保存到数据库中。
+
+##### 事务4个隔离级别
+
+ read uncommit 读未提交，可能会读到其他事务未提交的数据，也叫做脏读。 用户本来应该读取到id=1的用户age应该是10，结果读取到了其他事务还没有提交的事务，结果读 取结果age=20，这就是脏读。 
+
+read commit 读已提交，两次读取结果不一致，叫做不可重复读。 不可重复读解决了脏读的问题，他只会读取已经提交的事务。 用户开启事务读取id=1用户，查询到age=10，再次读取发现结果=20，在同一个事务里同一个查 询读取到不同的结果叫做不可重复读。 
+
+repeatable read 可重复复读，这是mysql的默认级别，就是每次读取结果都一样，但是有可能产 生幻读。 
+
+serializable 串行，一般是不会使用的，他会给每一行读取的数据加锁，会导致大量超时和锁竞争 的问题。
+
+## redis
+
+Redis 是一个使用 C 语言写成的，开源的高性能key-value非关系缓存数据库。它支持存储的value 类型相对更多，包括string(字符串)、list(链表)、set(集合)、zset(sorted set --有序集合)和 hash（哈希类型）
+
+#### Redis 提供两种持久化机制 RDB（默认） 和 AOF 机制
+
+**RDB：是Redis DataBase缩写快照** 
+
+- RDB是Redis默认的持久化方式。按照一定的时间将内存的数据以快照的形式保存到硬盘中，对应产生的数据文件为dump.rdb。通过配置文件中的save参数来定义快照的周期。 
+
+- **优点：** 
+
+  1. 只有一个文件 dump.rdb，方便持久化。 
+  2. 容灾性好，一个文件可以保存到安全的磁盘。 
+  3. 性能最大化，fork 子进程来完成写操作，让主进程继续处理命令，所以是 IO 最大化。使用单 独子进程来进行持久化，主进程不会进行任何 IO 操作，保证了 redis 的高性能 
+  4. 相对于数据集大时，比 AOF 的启动效率更高。 
+
+  **缺点：**
+
+  1. 数据安全性低。RDB 是间隔一段时间进行持久化，如果持久化之间 redis 发生故障，会发生数 据丢失。所以这种方式更适合数据要求不严谨的时候) 
+
+  2. AOF（Append-only fifile)持久化方式： 是指所有的命令行记录以 redis 命令请 求协议的格式 完全持久化存储)保存为 aof 文件。
+
+  3. **AOF：持久化：** 
+
+     - AOF持久化(即Append Only File持久化)，则是将Redis执行的每次写命令记录到单独的日志文件 
+     - 中，当重启Redis会重新将持久化的日志中文件恢复数据。当两种方式同时开启时，数据恢复Redis会优先选择AOF恢复 
+
+     **优点：** 
+
+     1. 数据安全，aof 持久化可以配置 appendfsync 属性，有 always，每进行一次 命令操作就记录 到 aof 文件中一次。
+     2. 通过 append 模式写文件，即使中途服务器宕机，可以通过 redis-check-aof 工具解决数据一 致性问题。
+     3. AOF 机制的 rewrite 模式。AOF 文件没被 rewrite 之前（文件过大时会对命令 进行合并重写），可以删除其中的某些命令（比如误操作的 flflushall）) 
+
+     **缺点：** 
+
+     1. AOF 文件比 RDB 文件大，且恢复速度慢。 
+     2. 数据集大的时候，比 rdb 启动效率低。 
+
+
+
+
+
+#### redis缓存穿透 雪崩 击穿
+
+##### 缓存穿透
+
+缓存穿透表示查询一个一定不存在的数据，由于没有获取到缓存，所以没写入缓存，导致这个不存在的数据每次都需要去数据库查询，失去了缓存的意义。
+
+请求的数据大量的没有获取到缓存，导致走数据库，有可能搞垮数据库，使整个服务瘫痪。
+
+比如文章表，一般我们的主键ID都是无符号的自增类型，有些人想要搞垮你的数据库，每次请求都用负数ID，而ID为负数的记录在数据库根本就没有。
+
+解决方案：
+
+1、对于像ID为负数的非法请求直接过滤掉，采用布隆过滤器(Bloom Filter)。
+
+2、针对在数据库中找不到记录的，我们仍然将该空数据存入缓存中，当然一般会设置一个较短的过期时间。
+
+##### 缓存雪崩
+
+缓存雪崩表示在某一时间段，缓存集中失效，导致请求全部走数据库，有可能搞垮数据库，使整个服务瘫痪。
+
+使缓存集中失效的原因：
+
+1、redis服务器挂掉了。
+
+2、对缓存数据设置了相同的过期时间，导致某时间段内缓存集中失效。
+
+如何解决缓存集中失效：
+
+1、针对原因1，可以实现redis的高可用，Redis Cluster 或者 Redis Sentinel(哨兵) 等方案。
+
+2、针对原因2，设置缓存过期时间时加上一个随机值，避免缓存在同一时间过期。
+
+##### 缓存击穿
+
+缓存击穿表示某个key的缓存非常热门，有很高的并发一直在访问，如果该缓存失效，那同时会走数据库，压垮数据库。
+
+缓存击穿与缓存雪崩的区别是这里针对的是某一热门key缓存，而雪崩针对的是大量缓存的集中失效。
+
+解决方案：
+
+1、让该热门key的缓存永不过期。
+
+2、使用互斥锁，通过redis的setnx实现互斥锁。
+
+
+
+# Linux
+
+#### df命令
+
+Linux df（disk free） 命令用于显示目前在 Linux 系统上的文件系统磁盘使用情况统计。
+
+full gc  yong gc
+Servlet生命周期
+MySQL索引失效情况
+磁盘满了怎么排查，命令

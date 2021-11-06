@@ -1,14 +1,14 @@
-# Java
+![](https://tdoors.coding.net/p/img/d/img/git/raw/master/SharedScreenshot.jpg?download=false)
 
 ## Java集合
 
 #### List，Set，Map三者的区别
 
-![](https://raw.githubusercontent.com/tdoor/img/main/Java%E9%9B%86%E5%90%88.png)
+![Java集合.png (644×715) (coding.net)](https://tdoors.coding.net/p/img/d/img/git/raw/master/Java集合.png?download=false)
 
 #### 集合框架底层数据结构
 
-![](https://raw.githubusercontent.com/tdoor/img/main/3g5zoq4pke.png)
+![hashmap.png (622×469) (coding.net)](https://tdoors.coding.net/p/img/d/img/git/raw/master/hashmap.png?download=false)
 
 ## JVM
 
